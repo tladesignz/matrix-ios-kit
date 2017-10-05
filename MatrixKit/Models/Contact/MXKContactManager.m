@@ -458,15 +458,18 @@ static MXKContactManager* sharedMXKContactManager = nil;
     {
         // Check all existing users for whom a direct chat exists
         NSArray *mxUserIds = mxSession.directRooms.allKeys;
-        
-        for (NSString *mxUserId in mxUserIds)
+
+        @autoreleasepool
         {
-            MXKContact* contact = [matrixContactByMatrixID objectForKey:mxUserId];
-            
-            // Sanity check - the contact must be already defined here
-            if (contact)
+            for (NSString *mxUserId in mxUserIds)
             {
-                [directContacts setValue:contact forKey:mxUserId];
+                MXKContact* contact = [matrixContactByMatrixID objectForKey:mxUserId];
+
+                // Sanity check - the contact must be already defined here
+                if (contact)
+                {
+                    [directContacts setValue:contact forKey:mxUserId];
+                }
             }
         }
     }
@@ -1211,35 +1214,38 @@ static MXKContactManager* sharedMXKContactManager = nil;
         NSMutableDictionary *updatedMatrixContactByMatrixID = [[NSMutableDictionary alloc] initWithCapacity:matrixContactByMatrixID.count];
         for (MXSession *mxSession in mxSessions)
         {
-            // Check all existing users
-            NSArray *mxUsers = mxSession.users;
-
-            for (MXUser *user in mxUsers)
+            @autoreleasepool
             {
-                // Check whether this user has already been added
-                if (![updatedMatrixContactByMatrixID objectForKey:user.userId])
+                // Check all existing users
+                NSArray *mxUsers = mxSession.users;
+
+                for (MXUser *user in mxUsers)
                 {
-                    if ((self.contactManagerMXRoomSource == MXKContactManagerMXRoomSourceAll) || ((self.contactManagerMXRoomSource == MXKContactManagerMXRoomSourceDirectChats) && mxSession.directRooms[user.userId]))
+                    // Check whether this user has already been added
+                    if (![updatedMatrixContactByMatrixID objectForKey:user.userId])
                     {
-                        // Check whether a contact is already defined for this id in previous dictionary
-                        // (avoid delete and create the same ones, it could save thumbnail downloads).
-                        MXKContact* contact = [matrixContactByMatrixID objectForKey:user.userId];
-                        if (contact)
+                        if ((self.contactManagerMXRoomSource == MXKContactManagerMXRoomSourceAll) || ((self.contactManagerMXRoomSource == MXKContactManagerMXRoomSourceDirectChats) && mxSession.directRooms[user.userId]))
                         {
-                            contact.displayName = (user.displayname.length > 0) ? user.displayname : user.userId;
-                            
-                            // Check the avatar change
-                            if ((user.avatarUrl || contact.matrixAvatarURL) && ([user.avatarUrl isEqualToString:contact.matrixAvatarURL] == NO))
+                            // Check whether a contact is already defined for this id in previous dictionary
+                            // (avoid delete and create the same ones, it could save thumbnail downloads).
+                            MXKContact* contact = [matrixContactByMatrixID objectForKey:user.userId];
+                            if (contact)
                             {
-                                [contact resetMatrixThumbnail];
+                                contact.displayName = (user.displayname.length > 0) ? user.displayname : user.userId;
+
+                                // Check the avatar change
+                                if ((user.avatarUrl || contact.matrixAvatarURL) && ([user.avatarUrl isEqualToString:contact.matrixAvatarURL] == NO))
+                                {
+                                    [contact resetMatrixThumbnail];
+                                }
                             }
+                            else
+                            {
+                                contact = [[MXKContact alloc] initMatrixContactWithDisplayName:((user.displayname.length > 0) ? user.displayname : user.userId) andMatrixID:user.userId];
+                            }
+
+                            [updatedMatrixContactByMatrixID setValue:contact forKey:user.userId];
                         }
-                        else
-                        {
-                            contact = [[MXKContact alloc] initMatrixContactWithDisplayName:((user.displayname.length > 0) ? user.displayname : user.userId) andMatrixID:user.userId];
-                        }
-                        
-                        [updatedMatrixContactByMatrixID setValue:contact forKey:user.userId];
                     }
                 }
             }
