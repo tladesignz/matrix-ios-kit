@@ -1,9 +1,12 @@
-Changes in MatrixKit in 0.9.3 (2019-01-)
+Changes in MatrixKit in 0.9.5 (2019-02-)
 ==========================================
 
 Improvements:
  * Upgrade MatrixSDK version (v0.12.2).
  * MXKTableViewCellWithButton: Remove all controls events on the button in [self prepareForReuse].
+ 
+ API break:
+ * MXKAccount: Remove warnedAboutEncryption property (vector-im/riot-ios/issues/2239)
 
 Changes in MatrixKit in 0.9.4 (2019-01-05)
 ==========================================

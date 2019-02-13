@@ -186,11 +186,6 @@ typedef BOOL (^MXKAccountOnCertificateChange)(MXKAccount *mxAccount, NSData *cer
 @property (nonatomic) BOOL hideUserPresence;
 
 /**
- Flag indicating if the end user has been warned about encryption and its limitations.
- */
-@property (nonatomic,getter=isWarnedAboutEncryption) BOOL warnedAboutEncryption;
-
-/**
  Flag indicating whether to show decrypted content in notifications.
  NO by default
  */
