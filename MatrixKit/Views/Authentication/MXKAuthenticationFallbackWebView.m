@@ -107,7 +107,7 @@ sendObjectMessage({  \
     if ([urlString hasPrefix:@"js:"])
     {
         // Listen only to scheme of the JS-UIWebView bridge
-        NSString *jsonString = [[[urlString componentsSeparatedByString:@"js:"] lastObject]  stringByReplacingPercentEscapesUsingEncoding:NSASCIIStringEncoding];
+        NSString *jsonString = [[[urlString componentsSeparatedByString:@"js:"] lastObject]  stringByRemovingPercentEncoding];
         NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
         
         NSError *error;

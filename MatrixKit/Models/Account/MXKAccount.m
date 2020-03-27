@@ -840,7 +840,7 @@ static MXKAccountOnCertificateChange _onCertificateChangeBlock;
  */
 - (void)closeSession:(BOOL)clearStore
 {
-    NSLog(@"[MXKAccount] closeSession (%tu)", clearStore);
+    NSLog(@"[MXKAccount] closeSession (%d)", clearStore);
     
     if (NSCurrentLocaleDidChangeNotificationObserver)
     {

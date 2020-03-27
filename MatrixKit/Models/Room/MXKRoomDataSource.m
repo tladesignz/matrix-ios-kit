@@ -2741,7 +2741,7 @@ NSString *const kMXKRoomDataSourceTimelineErrorErrorKey = @"kMXKRoomDataSourceTi
                 {
                     @autoreleasepool
                     {
-                        [self addReadReceiptsForEvent:queuedEvent.event.eventId inCellDatas:bubblesSnapshot startingAtCellData:self->eventIdToBubbleMap[queuedEvent.event.eventId]];
+                        [self addReadReceiptsForEvent:queuedEvent.event.eventId inCellDatas:self->bubblesSnapshot startingAtCellData:self->eventIdToBubbleMap[queuedEvent.event.eventId]];
                     }
                 }
 
@@ -2932,7 +2932,7 @@ NSString *const kMXKRoomDataSourceTimelineErrorErrorKey = @"kMXKRoomDataSourceTi
 
         if (!areReadReceiptsAssigned)
         {
-            NSLog(@"[MXKRoomDataSource] addReadReceipts: Try to attach read receipts to an older message", eventId);
+            NSLog(@"[MXKRoomDataSource] addReadReceipts: Try to attach read receipts to an older message");
 
             // Try to assign RRs to a previous cell data
             if (cellDataIndex >= 1)

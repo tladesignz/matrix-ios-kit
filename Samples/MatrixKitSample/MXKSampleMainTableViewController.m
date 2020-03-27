@@ -1019,7 +1019,7 @@
     UIViewController *rootController = app.keyWindow.rootViewController;
     
     // Refresh the root view controller frame
-    CGRect frame = [[UIScreen mainScreen] applicationFrame];
+    CGRect frame = [[UIScreen mainScreen] bounds];
     if (callStatusBarWindow)
     {
         // Substract the height of call status bar from the frame.
