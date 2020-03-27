@@ -1,10 +1,12 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '9.0'
+platform :ios, '10.0'
 
 # Use frameforks to allow usage of pod written in Swift (like PiwikTracker)
 use_frameworks!
 
 abstract_target 'MatrixKitSamplePods' do
+
+    pod 'AFNetworking', :git => 'https://github.com/ElfSundae/AFNetworking.git' # Removes UIWebView dependency.
     
     # Different flavours of pods to Matrix SDK
     # The tagged version on which this version of MatrixKit has been built
