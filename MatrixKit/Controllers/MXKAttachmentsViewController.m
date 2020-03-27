@@ -34,6 +34,8 @@
 
 #import "MXKAttachmentInteractionController.h"
 
+#import <WebKit/WebKit.h>
+
 @interface MXKAttachmentsViewController () <UINavigationControllerDelegate, UIViewControllerTransitioningDelegate>
 {
     /**
@@ -685,13 +687,22 @@
                     width = minSize;
                     height = minSize;
                 }
-                
-                UIWebView *animatedGifViewer = [[UIWebView alloc] initWithFrame:CGRectMake(0, 0, width, height)];
+
+                // Replacement for UIWebView#scalesPagesToFit.
+                NSString *jScript = @"var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'width=device-width'); document.getElementsByTagName('head')[0].appendChild(meta);";
+
+                WKUserScript *wkUScript = [[WKUserScript alloc] initWithSource:jScript injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
+                WKUserContentController *wkUController = [[WKUserContentController alloc] init];
+                [wkUController addUserScript:wkUScript];
+
+                WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+                config.userContentController = wkUController;
+
+                WKWebView *animatedGifViewer = [[WKWebView alloc] initWithFrame:CGRectMake(0, 0, width, height) configuration:config];
                 animatedGifViewer.center = cell.customView.center;
                 animatedGifViewer.opaque = NO;
                 animatedGifViewer.backgroundColor = cell.customView.backgroundColor;
                 animatedGifViewer.contentMode = UIViewContentModeScaleAspectFit;
-                animatedGifViewer.scalesPageToFit = YES;
                 animatedGifViewer.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin);
                 animatedGifViewer.userInteractionEnabled = NO;
                 [cell.customView addSubview:animatedGifViewer];
@@ -745,8 +756,8 @@
                     
                     if (animatedGifViewer.superview)
                     {
-                        [animatedGifViewer loadData:data MIMEType:@"image/gif" textEncodingName:@"UTF-8" baseURL:[NSURL URLWithString:@"http://"]];
-                        
+                        [animatedGifViewer loadData:data MIMEType:@"image/gif" characterEncodingName:@"UTF-8" baseURL:[NSURL URLWithString:@"http://"]];
+
                         [pieChartView removeFromSuperview];
                         [previewImage removeFromSuperview];
                     }

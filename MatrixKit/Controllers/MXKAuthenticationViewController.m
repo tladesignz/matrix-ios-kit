@@ -60,16 +60,6 @@
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateCustomBlock;
     
     /**
-     The current authentication fallback URL (if any).
-     */
-    NSString *authenticationFallback;
-    
-    /**
-     The cancel button added in navigation bar when fallback page is opened.
-     */
-    UIBarButtonItem *cancelFallbackBarButton;
-    
-    /**
      The timer used to postpone the registration when the authentication is pending (for example waiting for email validation)
      */
     NSTimer* registrationTimer;
@@ -209,8 +199,6 @@
     _identityServerLabel.text = [NSBundle mxk_localizedStringForKey:@"login_identity_server_title"];
     _identityServerTextField.placeholder = [NSBundle mxk_localizedStringForKey:@"login_server_url_placeholder"];
     _identityServerInfoLabel.text = [NSBundle mxk_localizedStringForKey:@"login_identity_server_info"];
-    [_cancelAuthFallbackButton setTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
-    [_cancelAuthFallbackButton setTitle:[NSBundle mxk_localizedStringForKey:@"cancel"] forState:UIControlStateHighlighted];
 }
 
 - (void)dealloc
@@ -292,9 +280,6 @@
     [mxRestClient close];
     mxRestClient = nil;
 
-    authenticationFallback = nil;
-    cancelFallbackBarButton = nil;
-    
     [super destroy];
 }
 
@@ -676,9 +661,6 @@
     [mxCurrentOperation cancel];
     mxCurrentOperation = nil;
     
-    // Reset potential authentication fallback url
-    authenticationFallback = nil;
-    
     if (mxRestClient)
     {
         if (_authType == MXKAuthenticationTypeLogin)
@@ -723,13 +705,11 @@
     Class authInputsViewClass;
     if (_authType == MXKAuthenticationTypeLogin)
     {
-        authenticationFallback = [mxRestClient loginFallback];
         authInputsViewClass = loginAuthInputsViewClass;
         
     }
     else if (_authType == MXKAuthenticationTypeRegister)
     {
-        authenticationFallback = [mxRestClient registerFallback];
         authInputsViewClass = registerAuthInputsViewClass;
     }
     else
@@ -765,7 +745,6 @@
         // Check whether all listed flows in this authentication session are supported
         // We suggest using the fallback page (if any), when at least one flow is not supported.
         else if ((authInputsView.authSession.flows.count != authSession.flows.count)
-                 && authenticationFallback.length
                  && !_softLogoutCredentials)
         {
             NSLog(@"[MXKAuthenticationVC] Suggest using fallback page");
@@ -828,17 +807,9 @@
         }
         NSLog(@"[MXKAuthenticationVC] Warning: %@", _noFlowLabel.text);
         
-        if (authenticationFallback.length)
-        {
-            [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"login_use_fallback"] forState:UIControlStateNormal];
-            [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"login_use_fallback"] forState:UIControlStateNormal];
-        }
-        else
-        {
-            [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"retry"] forState:UIControlStateNormal];
-            [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"retry"] forState:UIControlStateNormal];
-        }
-        
+        [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"retry"] forState:UIControlStateNormal];
+        [_retryButton setTitle:[NSBundle mxk_localizedStringForKey:@"retry"] forState:UIControlStateNormal];
+
         _noFlowLabel.hidden = NO;
         _retryButton.hidden = NO;
     }
@@ -1176,19 +1147,7 @@
     }
     else if (sender == _retryButton)
     {
-        if (authenticationFallback)
-        {
-            [self showAuthenticationFallBackView:authenticationFallback];
-        }
-        else
-        {
-            [self refreshAuthenticationSession];
-        }
-    }
-    else if (sender == _cancelAuthFallbackButton)
-    {
-        // Hide fallback webview
-        [self hideRegistrationFallbackView];
+        [self refreshAuthenticationSession];
     }
 }
 
@@ -2035,74 +1994,6 @@
 - (MXIdentityService *)authInputsViewThirdPartyIdValidationIdentityService:(MXIdentityService *)authInputsView
 {
     return self.identityService;
-}
-
-#pragma mark - Authentication Fallback
-
-- (void)showAuthenticationFallBackView
-{
-    [self showAuthenticationFallBackView:authenticationFallback];
-}
-
-- (void)showAuthenticationFallBackView:(NSString*)fallbackPage
-{
-    _authenticationScrollView.hidden = YES;
-    _authFallbackContentView.hidden = NO;
-    
-    // Add a cancel button in case of navigation controller use.
-    if (self.navigationController)
-    {
-        if (!cancelFallbackBarButton)
-        {
-            cancelFallbackBarButton = [[UIBarButtonItem alloc] initWithTitle:[NSBundle mxk_localizedStringForKey:@"login_leave_fallback"] style:UIBarButtonItemStylePlain target:self action:@selector(hideRegistrationFallbackView)];
-        }
-        
-        // Add cancel button in right bar items
-        NSArray *rightBarButtonItems = self.navigationItem.rightBarButtonItems;
-        self.navigationItem.rightBarButtonItems = rightBarButtonItems ? [rightBarButtonItems arrayByAddingObject:cancelFallbackBarButton] : @[cancelFallbackBarButton];
-    }
-
-    if (self.softLogoutCredentials)
-    {
-        // Add device_id as query param of the fallback
-        NSURLComponents *components = [[NSURLComponents alloc] initWithString:fallbackPage];
-
-        NSMutableArray<NSURLQueryItem*> *queryItems = [components.queryItems mutableCopy];
-        if (!queryItems)
-        {
-            queryItems = [NSMutableArray array];
-        }
-
-        [queryItems addObject:[NSURLQueryItem queryItemWithName:@"device_id"
-                                                          value:self.softLogoutCredentials.deviceId]];
-
-        components.queryItems = queryItems;
-
-        fallbackPage = components.URL.absoluteString;
-    }
-
-    [_authFallbackWebView openFallbackPage:fallbackPage success:^(MXLoginResponse *loginResponse) {
-        
-        MXCredentials *credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse andDefaultCredentials:self->mxRestClient.credentials];
-        
-        // TODO handle unrecognized certificate (if any) during registration through fallback webview.
-        
-        [self onSuccessfulLogin:credentials];
-    }];
-}
-
-- (void)hideRegistrationFallbackView
-{
-    if (cancelFallbackBarButton)
-    {
-        NSMutableArray *rightBarButtonItems = [NSMutableArray arrayWithArray: self.navigationItem.rightBarButtonItems];
-        [rightBarButtonItems removeObject:cancelFallbackBarButton];
-        self.navigationItem.rightBarButtonItems = rightBarButtonItems;
-    }
-    
-    [_authFallbackWebView stopLoading];
-    _authenticationScrollView.hidden = NO;
-    _authFallbackContentView.hidden = YES;
 }
 
 #pragma mark - KVO

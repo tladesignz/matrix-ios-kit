@@ -21,7 +21,6 @@
 #import "MXKViewController.h"
 
 #import "MXKAuthInputsView.h"
-#import "MXKAuthenticationFallbackWebView.h"
 
 @class MXKAuthenticationViewController;
 
@@ -91,10 +90,6 @@
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *authenticationActivityIndicator;
 @property (weak, nonatomic) IBOutlet UILabel *noFlowLabel;
 @property (weak, nonatomic) IBOutlet UIButton *retryButton;
-
-@property (weak, nonatomic) IBOutlet UIView *authFallbackContentView;
-@property (weak, nonatomic) IBOutlet MXKAuthenticationFallbackWebView *authFallbackWebView;
-@property (weak, nonatomic) IBOutlet UIButton *cancelAuthFallbackButton;
 
 /**
  The current authentication type (MXKAuthenticationTypeLogin by default).
@@ -272,14 +267,6 @@
  @param credentials the user's credentials.
  */
 - (void)onSuccessfulLogin:(MXCredentials*)credentials;
-
-
-#pragma mark - Authentication Fallback
-
-/**
- Display the fallback URL within a webview.
- */
-- (void)showAuthenticationFallBackView;
 
 @end
 
